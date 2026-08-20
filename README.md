@@ -1,6 +1,13 @@
 # AgeVerify
 
-Lightweight, PII-free age verification. No names, no dates of birth, no documents pass through this system — only a short-lived, cryptographically signed claim: "an accredited domain vouches that this browser is controlled by an adult, as of a timestamp within the last hour."
+**Reusable, PII-free age-verification tokens: verify once, prove it anywhere.**
+
+[![Status: proof-of-concept](https://img.shields.io/badge/status-proof--of--concept-ffc65c?style=for-the-badge)](#status)
+[![No PII](https://img.shields.io/badge/PII%20stored-none-b7ed67?style=for-the-badge)](#why)
+[![Node.js 18+](https://img.shields.io/badge/node-18%2B-57d8d0?style=for-the-badge)](package.json)
+[![License: AGPL v3](https://img.shields.io/badge/license-AGPL--3.0-b69cff?style=for-the-badge)](LICENSE)
+
+No names, no dates of birth, no documents pass through this system — only a short-lived, cryptographically signed claim: "an accredited domain vouches that this browser is controlled by an adult, as of a timestamp within the last hour."
 
 ## Why
 
@@ -14,6 +21,27 @@ This project was scoped down from an earlier, harder design (also called Voucher
 - **Voucher** — an organisation that already knows its users are adults for an unrelated reason (an employer's HR records, a GP surgery's patient list, a bank's KYC, a licensed venue's door check, whatever). Once accredited, it can mint tokens for its own already-authenticated users.
 - **Bob** — the end user. Visits a page on an accredited Voucher's own site, clicks once, gets a signed token valid for **1 hour**.
 - **Bouncer** — any relying site. Checks Bob's token **offline** against the root's published public key (cached, no live call to root or the Voucher at redemption time). Sets its own session flag and discards the token — nothing is retained.
+
+```mermaid
+sequenceDiagram
+    participant B as Bob (user)
+    participant V as Voucher site
+    participant R as Root authority
+    participant Bn as Bouncer site
+
+    Note over V,R: One-time accreditation
+    V->>R: Prove domain control
+    R-->>V: Accredited
+
+    Note over B,Bn: Per-user, once at registration
+    B->>V: Already logged in / gated as an adult
+    V->>R: Mint token for Bob
+    R-->>V: Signed token (1h expiry)
+    V-->>B: Token
+    B->>Bn: Present token
+    Bn->>Bn: Verify signature + expiry offline<br/>(cached root public key)
+    Bn-->>B: Access granted, session flag set
+```
 
 ### How the root confirms a Voucher
 

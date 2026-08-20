@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "license": "AGPL-3.0-only",
   "description": "Lightweight, PII-free age verification tokens. Voucher (accredited issuer) certifies Bob (the user); Bouncer (relying site) checks the certification offline.",
   "scripts": {
     "root": "node server/root.js",
