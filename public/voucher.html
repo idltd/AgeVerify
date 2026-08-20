@@ -4,43 +4,79 @@
 <meta charset="utf-8">
 <title>AgeVerify — Voucher registration</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 640px; margin: 3rem auto; padding: 0 1rem; color: #222; }
-  h1 { font-size: 1.4rem; }
-  code, pre { background: #f0f0f0; padding: 0.2rem 0.4rem; border-radius: 4px; }
-  pre { padding: 0.8rem; overflow-x: auto; }
-  input { width: 100%; padding: 0.5rem; font-size: 1rem; box-sizing: border-box; }
-  button { padding: 0.5rem 1rem; font-size: 1rem; margin-top: 0.5rem; cursor: pointer; }
-  .step { border-left: 3px solid #ccc; padding-left: 1rem; margin: 1.5rem 0; }
-  .ok { color: #087f23; font-weight: bold; }
-  .err { color: #b00020; font-weight: bold; }
+  :root {
+    --bg: #f4f5f9; --card: #ffffff; --text: #1a1a2e; --muted: #6b7280; --border: #e6e7ec;
+    --accent: #ffc65c; --accent-dark: #d99f2b; --ok: #16a34a; --err: #dc2626; --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text);
+    margin: 0; padding: 3rem 1rem; line-height: 1.5;
+  }
+  .card {
+    max-width: 640px; margin: 0 auto; background: var(--card); border-radius: var(--radius);
+    padding: 2.25rem; box-shadow: 0 1px 2px rgba(20,20,40,0.04), 0 8px 24px rgba(20,20,40,0.06);
+    border-top: 4px solid var(--accent);
+  }
+  h1 { font-size: 1.5rem; margin: 0 0 0.4rem; }
+  .lede { color: var(--muted); margin-top: 0; }
+  code, pre { background: #f0f1f5; padding: 0.2rem 0.45rem; border-radius: 6px; font-size: 0.85rem; }
+  pre { padding: 0.8rem 1rem; overflow-x: auto; }
+  input[type=text] { width: 100%; padding: 0.6rem 0.7rem; font-size: 0.95rem; border: 1px solid var(--border); border-radius: 8px; }
+  button {
+    background: var(--accent-dark); color: #fff; border: none; border-radius: 8px;
+    padding: 0.65rem 1.15rem; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+    margin-top: 0.6rem; transition: opacity 0.15s;
+  }
+  button:hover { opacity: 0.88; }
+  .step {
+    position: relative; border-left: 2px solid var(--border); padding: 0.2rem 0 0.2rem 1.5rem;
+    margin: 1.75rem 0;
+  }
+  .step-label {
+    position: absolute; left: -14px; top: 0; width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent); color: #4a3200; font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .step h2 { font-size: 1rem; margin: 0 0 0.5rem; }
+  .scope-row { display: flex; align-items: center; gap: 0.4rem; margin: 0.35rem 0; }
+  .scope-row input { margin: 0; width: auto; }
+  .ok { color: var(--ok); font-weight: 600; }
+  .err { color: var(--err); font-weight: 600; }
+  .hint { color: var(--muted); font-size: 0.88rem; }
 </style>
 </head>
 <body>
-<h1>Become an accredited Voucher</h1>
-<p>Register the domain your organisation will certify users from. We only check that you control the domain — not how you know your users are adults. That's on you.</p>
+<div class="card">
+<h1>🏛️ Become an accredited Voucher</h1>
+<p class="lede">Register the domain your organisation will certify users from. We only check that you control the domain — not how you know your users are adults. That's on you.</p>
 
 <div class="step">
-  <strong>1. Domain</strong><br>
-  <input id="domain" value="http://localhost:4001" />
-  <button id="registerBtn">Register</button>
+  <span class="step-label">1</span>
+  <h2>Domain</h2>
+  <input type="text" id="domain" value="http://localhost:4001" />
+  <div><button id="registerBtn">Register</button></div>
   <div id="registerResult"></div>
 </div>
 
 <div class="step" id="proofStep" style="display:none">
-  <strong>2. Prove control</strong>
+  <span class="step-label">2</span>
+  <h2>Prove control</h2>
   <p>Place this at <code id="wellKnownUrl"></code>:</p>
   <pre id="codeBlock"></pre>
   <p>...or add this meta tag to your homepage's &lt;head&gt;:</p>
   <pre id="metaBlock"></pre>
-  <p><em>Demo shortcut: click below to have the Voucher demo site place it for you automatically.</em></p>
+  <p class="hint">Demo shortcut: click below to have the Voucher demo site place it for you automatically.</p>
   <button id="autoPlaceBtn">Auto-place on demo site (localhost:4001)</button>
 
-  <p style="margin-top:1rem"><strong>Entitlements you're accredited for</strong> (only assert what your own gate actually checks):</p>
-  <label><input type="checkbox" name="scope" value="over18" checked> over18</label><br>
-  <label><input type="checkbox" name="scope" value="over21"> over21</label>
+  <p style="margin-top:1.25rem"><strong>Entitlements you're accredited for</strong></p>
+  <p class="hint">Only select what your own gate actually checks.</p>
+  <div class="scope-row"><input type="checkbox" id="scope-over18" name="scope" value="over18" checked><label for="scope-over18">over18</label></div>
+  <div class="scope-row"><input type="checkbox" id="scope-over21" name="scope" value="over21"><label for="scope-over21">over21</label></div>
 
-  <button id="verifyBtn">I've placed it — verify now</button>
+  <div><button id="verifyBtn">I've placed it — verify now</button></div>
   <div id="verifyResult"></div>
+</div>
 </div>
 
 <script>

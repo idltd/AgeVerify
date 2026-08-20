@@ -4,22 +4,52 @@
 <meta charset="utf-8">
 <title>Bouncer — check certification</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 560px; margin: 3rem auto; padding: 0 1rem; color: #222; }
-  textarea { width: 100%; height: 90px; font-family: monospace; font-size: 0.85rem; }
-  button { padding: 0.6rem 1.2rem; font-size: 1rem; cursor: pointer; margin-top: 0.5rem; }
-  .ok { color: #087f23; font-weight: bold; }
-  .err { color: #b00020; font-weight: bold; }
+  :root {
+    --bg: #f4f5f9; --card: #ffffff; --text: #1a1a2e; --muted: #6b7280; --border: #e6e7ec;
+    --accent: #57d8d0; --accent-dark: #2fb8b0; --ok: #16a34a; --err: #dc2626; --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text);
+    margin: 0; padding: 3rem 1rem; line-height: 1.5;
+  }
+  .card {
+    max-width: 560px; margin: 0 auto; background: var(--card); border-radius: var(--radius);
+    padding: 2.25rem; box-shadow: 0 1px 2px rgba(20,20,40,0.04), 0 8px 24px rgba(20,20,40,0.06);
+    border-top: 4px solid var(--accent);
+  }
+  h1 { font-size: 1.4rem; margin: 0 0 0.6rem; }
+  textarea {
+    width: 100%; height: 90px; font-family: ui-monospace, monospace; font-size: 0.8rem;
+    border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem;
+  }
+  button {
+    background: var(--accent-dark); color: #fff; border: none; border-radius: 8px;
+    padding: 0.65rem 1.2rem; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+    margin-top: 0.75rem; transition: opacity 0.15s;
+  }
+  button:hover { opacity: 0.88; }
+  .ok { color: var(--ok); font-weight: 600; }
+  .err { color: var(--err); font-weight: 600; }
+  #content {
+    margin-top: 1.25rem; padding: 1rem 1.25rem; border-radius: 10px;
+    background: #ecfdf5; border: 1px solid #a7f3d0;
+  }
+  #content h2 { margin: 0 0 0.4rem; font-size: 1.1rem; }
+  #content p { margin: 0; color: #065f46; font-size: 0.9rem; }
 </style>
 </head>
 <body>
-<h1>Age-gated content (demo)</h1>
+<div class="card">
+<h1>🚪 Age-gated content (demo)</h1>
 <p id="gate">Paste Bob's certification token to continue:</p>
-<textarea id="token" placeholder="eyJhbGciOi..."></textarea><br>
-<button id="checkBtn">Check</button>
+<textarea id="token" placeholder="eyJhbGciOi..."></textarea>
+<div><button id="checkBtn">Check</button></div>
 <div id="result"></div>
 <div id="content" style="display:none">
   <h2>🔓 Welcome — content unlocked</h2>
-  <p>This site never saw who Bob is, which Voucher certified him, or anything beyond "an accredited domain vouched, within the last hour." Verified server-side; the token itself was discarded after the check.</p>
+  <p>This site never saw who Bob is, which Voucher certified him, or anything beyond "an accredited authority vouched, within the last hour." Verified server-side; the token itself was discarded after the check.</p>
+</div>
 </div>
 
 <script>
@@ -32,7 +62,7 @@ document.getElementById('checkBtn').onclick = async () => {
   });
   const data = await res.json();
   if (data.ok) {
-    out.innerHTML = `<span class="ok">Valid — entitlement ${data.entitlement}, certified by an accredited authority, expires ${new Date(data.expiresAt).toLocaleTimeString()}</span>`;
+    out.innerHTML = `<span class="ok">Valid — certifies ${data.entitlement}, expires ${new Date(data.expiresAt).toLocaleTimeString()}</span>`;
     document.getElementById('gate').style.display = 'none';
     document.getElementById('content').style.display = 'block';
   } else {

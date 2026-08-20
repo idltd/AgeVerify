@@ -58,11 +58,25 @@ app.post('/api/authorize', async (req, reply) => {
 
 app.get('/', async (req, reply) => {
   const metaTag = currentCode ? `<meta name="ageverify-verify" content="${currentCode}">` : '';
-  reply.type('text/html').send(`<!doctype html><html><head>${metaTag}<title>Acme Corp Staff Portal</title></head>
-<body style="font-family:system-ui;padding:2rem">
-<h1>Acme Corp — Staff Portal (demo)</h1>
-<p>This stands in for a real employer/GP-surgery page that's already behind its own login.</p>
-<p><a href="/bob.html">Continue to age certification &rarr;</a></p>
+  reply.type('text/html').send(`<!doctype html><html><head>${metaTag}<title>Acme Corp Staff Portal</title>
+<style>
+  :root { --bg:#f4f5f9; --card:#fff; --text:#1a1a2e; --muted:#6b7280; --accent:#b69cff; --accent-dark:#8a68f0; --radius:14px; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 3rem 1rem; line-height: 1.5; }
+  .card { max-width: 560px; margin: 0 auto; background: var(--card); border-radius: var(--radius); padding: 2.25rem;
+    box-shadow: 0 1px 2px rgba(20,20,40,0.04), 0 8px 24px rgba(20,20,40,0.06); border-top: 4px solid var(--accent); }
+  h1 { font-size: 1.4rem; margin: 0 0 0.4rem; }
+  .lede { color: var(--muted); }
+  a.cta { display: inline-block; margin-top: 0.5rem; background: var(--accent-dark); color: #fff; text-decoration: none;
+    border-radius: 8px; padding: 0.65rem 1.2rem; font-size: 0.9rem; font-weight: 600; }
+  a.cta:hover { opacity: 0.88; }
+</style>
+</head>
+<body>
+<div class="card">
+<h1>🏢 Acme Corp — Staff Portal (demo)</h1>
+<p class="lede">This stands in for a real employer/GP-surgery page that's already behind its own login.</p>
+<a class="cta" href="/bob.html">Continue to entitlement certification &rarr;</a>
+</div>
 </body></html>`);
 });
 

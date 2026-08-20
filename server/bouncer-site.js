@@ -29,6 +29,9 @@ app.get('/', async (req, reply) => {
   reply.type('text/html').send(fs.readFileSync(path.join(__dirname, '..', 'public', 'bouncer.html'), 'utf8'));
 });
 
+// Entitlements are ordered — holding a higher one satisfies a lower requirement
+// (over21 satisfies an over18 gate, same as a real ID would).
+const ENTITLEMENT_LEVEL = { over18: 18, over21: 21 };
 const REQUIRED_ENTITLEMENT = 'over18';
 
 app.post('/api/check', async (req, reply) => {
@@ -38,8 +41,9 @@ app.post('/api/check', async (req, reply) => {
   try {
     const key = await getRootPublicKey();
     const { payload } = await jwtVerify(token, key);
-    if (payload.entitlement !== REQUIRED_ENTITLEMENT) {
-      return { ok: false, error: `token asserts '${payload.entitlement}', not '${REQUIRED_ENTITLEMENT}'` };
+    const level = ENTITLEMENT_LEVEL[payload.entitlement];
+    if (!level || level < ENTITLEMENT_LEVEL[REQUIRED_ENTITLEMENT]) {
+      return { ok: false, error: `this site requires '${REQUIRED_ENTITLEMENT}' — token does not meet that` };
     }
     // The token carries no Voucher-identifying data — only Root's signature is checked here.
     return { ok: true, entitlement: payload.entitlement, expiresAt: payload.exp * 1000 };
