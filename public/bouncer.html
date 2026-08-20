@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Bouncer — check certification</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 560px; margin: 3rem auto; padding: 0 1rem; color: #222; }
+  textarea { width: 100%; height: 90px; font-family: monospace; font-size: 0.85rem; }
+  button { padding: 0.6rem 1.2rem; font-size: 1rem; cursor: pointer; margin-top: 0.5rem; }
+  .ok { color: #087f23; font-weight: bold; }
+  .err { color: #b00020; font-weight: bold; }
+</style>
+</head>
+<body>
+<h1>Age-gated content (demo)</h1>
+<p id="gate">Paste Bob's certification token to continue:</p>
+<textarea id="token" placeholder="eyJhbGciOi..."></textarea><br>
+<button id="checkBtn">Check</button>
+<div id="result"></div>
+<div id="content" style="display:none">
+  <h2>🔓 Welcome — content unlocked</h2>
+  <p>This site never saw who Bob is, which Voucher certified him, or anything beyond "an accredited domain vouched, within the last hour." Verified server-side; the token itself was discarded after the check.</p>
+</div>
+
+<script>
+document.getElementById('checkBtn').onclick = async () => {
+  const token = document.getElementById('token').value.trim();
+  const out = document.getElementById('result');
+  const res = await fetch('/api/check', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token })
+  });
+  const data = await res.json();
+  if (data.ok) {
+    out.innerHTML = `<span class="ok">Valid — issued by ${data.issuer}, expires ${new Date(data.expiresAt).toLocaleTimeString()}</span>`;
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+  } else {
+    out.innerHTML = `<span class="err">${data.error}</span>`;
+  }
+};
+</script>
+</body>
+</html>

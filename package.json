@@ -1,0 +1,16 @@
+{
+  "name": "ageverify",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Lightweight, PII-free age verification tokens. Voucher (accredited issuer) certifies Bob (the user); Bouncer (relying site) checks the certification offline.",
+  "scripts": {
+    "root": "node server/root.js",
+    "voucher-site": "node server/voucher-site.js",
+    "bouncer-site": "node server/bouncer-site.js"
+  },
+  "dependencies": {
+    "fastify": "^5.0.0",
+    "jose": "^5.9.6"
+  }
+}
