@@ -35,9 +35,10 @@ sequenceDiagram
 
     Note over B,Bn: Per-user, once at registration
     B->>V: Already logged in / gated as an adult
-    V->>R: Mint token for Bob
-    R-->>V: Signed token (1h expiry)
-    V-->>B: Token
+    Note over B: Clicks "get certified" on V's page
+    B->>R: Browser requests token directly<br/>(Origin header = V, set by the browser)
+    R->>R: Origin accredited? Sign token
+    R-->>B: Signed token (1h expiry)
     B->>Bn: Present token
     Bn->>Bn: Verify signature + expiry offline<br/>(cached root public key)
     Bn-->>B: Access granted, session flag set
