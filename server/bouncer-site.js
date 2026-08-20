@@ -29,6 +29,8 @@ app.get('/', async (req, reply) => {
   reply.type('text/html').send(fs.readFileSync(path.join(__dirname, '..', 'public', 'bouncer.html'), 'utf8'));
 });
 
+const REQUIRED_ENTITLEMENT = 'over18';
+
 app.post('/api/check', async (req, reply) => {
   const { token } = req.body ?? {};
   if (!token) return reply.code(400).send({ ok: false, error: 'no token provided' });
@@ -36,10 +38,11 @@ app.post('/api/check', async (req, reply) => {
   try {
     const key = await getRootPublicKey();
     const { payload } = await jwtVerify(token, key);
-    if (!payload.over18) {
-      return { ok: false, error: 'token does not assert over-18' };
+    if (payload.entitlement !== REQUIRED_ENTITLEMENT) {
+      return { ok: false, error: `token asserts '${payload.entitlement}', not '${REQUIRED_ENTITLEMENT}'` };
     }
-    return { ok: true, issuer: payload.iss, expiresAt: payload.exp * 1000 };
+    // The token carries no Voucher-identifying data — only Root's signature is checked here.
+    return { ok: true, entitlement: payload.entitlement, expiresAt: payload.exp * 1000 };
   } catch (err) {
     return { ok: false, error: 'invalid or expired token' };
   }

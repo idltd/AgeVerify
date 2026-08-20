@@ -32,7 +32,7 @@ document.getElementById('checkBtn').onclick = async () => {
   });
   const data = await res.json();
   if (data.ok) {
-    out.innerHTML = `<span class="ok">Valid — issued by ${data.issuer}, expires ${new Date(data.expiresAt).toLocaleTimeString()}</span>`;
+    out.innerHTML = `<span class="ok">Valid — entitlement ${data.entitlement}, certified by an accredited authority, expires ${new Date(data.expiresAt).toLocaleTimeString()}</span>`;
     document.getElementById('gate').style.display = 'none';
     document.getElementById('content').style.display = 'block';
   } else {

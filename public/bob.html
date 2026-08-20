@@ -14,26 +14,50 @@
 <body>
 <h1>You're on Acme Corp's staff portal</h1>
 <p>Because you're here — already authenticated by Acme Corp — you can get a short-lived age certification to use elsewhere.</p>
-<button id="certifyBtn">Get certified</button>
+<div id="picker"></div>
 <div id="result"></div>
 
 <script>
-document.getElementById('certifyBtn').onclick = async () => {
+async function init() {
+  const picker = document.getElementById('picker');
+  const res = await fetch('/api/scope');
+  const { scope } = await res.json();
+  if (!scope) { picker.innerHTML = '<span class="err">This Voucher is not yet accredited.</span>'; return; }
+  picker.innerHTML = scope.map(e => `<button data-entitlement="${e}">Get certified: ${e}</button>`).join(' ');
+  picker.querySelectorAll('button').forEach(btn => btn.onclick = () => certify(btn.dataset.entitlement));
+}
+
+async function certify(entitlement) {
   const out = document.getElementById('result');
   out.innerHTML = 'Requesting...';
   try {
-    const res = await fetch('http://localhost:4000/api/mint', { method: 'POST' });
-    const data = await res.json();
-    if (!res.ok) { out.innerHTML = `<span class="err">${data.error}</span>`; return; }
+    // Acme Corp signs a short-lived assertion locally — no call to root authority yet.
+    const authRes = await fetch('/api/authorize', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ entitlement })
+    });
+    const authData = await authRes.json();
+    if (!authRes.ok) { out.innerHTML = `<span class="err">${authData.error}</span>`; return; }
+
+    // Bob's browser carries that assertion to root authority itself for the actual token.
+    const mintRes = await fetch('http://localhost:4000/api/mint', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ assertion: authData.assertion })
+    });
+    const mintData = await mintRes.json();
+    if (!mintRes.ok) { out.innerHTML = `<span class="err">${mintData.error}</span>`; return; }
+
     out.innerHTML = `
-      <p class="ok">Certified. Valid for ${Math.round(data.expiresIn / 60)} minutes.</p>
-      <textarea readonly>${data.token}</textarea>
+      <p class="ok">Certified (${entitlement}). Valid for ${Math.round(mintData.expiresIn / 60)} minutes.</p>
+      <textarea readonly>${mintData.token}</textarea>
       <p>Copy this and paste it at <a href="http://localhost:4002" target="_blank">the Bouncer demo site</a>.</p>
     `;
   } catch (e) {
     out.innerHTML = '<span class="err">Could not reach root authority — is it running on :4000?</span>';
   }
-};
+}
+
+init();
 </script>
 </body>
 </html>

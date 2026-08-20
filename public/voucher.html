@@ -34,6 +34,11 @@
   <pre id="metaBlock"></pre>
   <p><em>Demo shortcut: click below to have the Voucher demo site place it for you automatically.</em></p>
   <button id="autoPlaceBtn">Auto-place on demo site (localhost:4001)</button>
+
+  <p style="margin-top:1rem"><strong>Entitlements you're accredited for</strong> (only assert what your own gate actually checks):</p>
+  <label><input type="checkbox" name="scope" value="over18" checked> over18</label><br>
+  <label><input type="checkbox" name="scope" value="over21"> over21</label>
+
   <button id="verifyBtn">I've placed it — verify now</button>
   <div id="verifyResult"></div>
 </div>
@@ -67,14 +72,26 @@ document.getElementById('autoPlaceBtn').onclick = async () => {
 };
 
 document.getElementById('verifyBtn').onclick = async () => {
+  const scope = [...document.querySelectorAll('input[name=scope]:checked')].map(el => el.value);
+  const out = document.getElementById('verifyResult');
+  if (scope.length === 0) { out.innerHTML = '<span class="err">Select at least one entitlement</span>'; return; }
+
+  const pubkeyRes = await fetch(`${domain}/api/pubkey`);
+  const { publicJwk } = await pubkeyRes.json();
+
   const res = await fetch('/api/verify', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ domain })
+    body: JSON.stringify({ domain, publicJwk, scope })
   });
   const data = await res.json();
-  const out = document.getElementById('verifyResult');
   if (!res.ok) { out.innerHTML = `<span class="err">${data.error}</span>`; return; }
-  out.innerHTML = `<span class="ok">Accredited as a Voucher.</span> Visit <a href="${domain}/bob.html" target="_blank">${domain}/bob.html</a> to get certified as Bob.`;
+
+  await fetch(`${domain}/internal/set-scope`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ scope })
+  });
+
+  out.innerHTML = `<span class="ok">Accredited as a Voucher for: ${scope.join(', ')}.</span> Visit <a href="${domain}/bob.html" target="_blank">${domain}/bob.html</a> to get certified as Bob.`;
 };
 </script>
 </body>

@@ -1,41 +1,33 @@
-import { generateKeyPair, exportJWK, exportPKCS8, importPKCS8, SignJWT } from 'jose';
+import { generateKeyPair, exportJWK, exportPKCS8, importPKCS8, importJWK, SignJWT, jwtVerify } from 'jose';
 import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const KEY_PATH = path.join(__dirname, '.keys.json');
-const KID = 'root-1';
-
-let privateKey;
-let publicJwk;
-
-export async function loadOrCreateKeys() {
-  if (fs.existsSync(KEY_PATH)) {
-    const { pkcs8, jwk } = JSON.parse(fs.readFileSync(KEY_PATH, 'utf8'));
-    privateKey = await importPKCS8(pkcs8, 'EdDSA');
-    publicJwk = jwk;
-  } else {
-    const { publicKey, privateKey: privKey } = await generateKeyPair('EdDSA', { crv: 'Ed25519', extractable: true });
-    privateKey = privKey;
-    publicJwk = await exportJWK(publicKey);
-    publicJwk.kid = KID;
-    publicJwk.alg = 'EdDSA';
-    publicJwk.use = 'sig';
-    const pkcs8 = await exportPKCS8(privKey);
-    fs.writeFileSync(KEY_PATH, JSON.stringify({ pkcs8, jwk: publicJwk }, null, 2));
+// Loads a persisted EdDSA keypair from keyPath, or generates and persists a new one.
+// Used by both Root and Voucher — each holds its own keypair, identified by its own kid.
+export async function loadOrCreateKeypair(keyPath, kid) {
+  if (fs.existsSync(keyPath)) {
+    const { pkcs8, jwk } = JSON.parse(fs.readFileSync(keyPath, 'utf8'));
+    const privateKey = await importPKCS8(pkcs8, 'EdDSA');
+    return { privateKey, publicJwk: jwk, kid };
   }
-  return { privateKey, publicJwk };
+  const { publicKey, privateKey } = await generateKeyPair('EdDSA', { crv: 'Ed25519', extractable: true });
+  const publicJwk = await exportJWK(publicKey);
+  publicJwk.kid = kid;
+  publicJwk.alg = 'EdDSA';
+  publicJwk.use = 'sig';
+  const pkcs8 = await exportPKCS8(privateKey);
+  fs.writeFileSync(keyPath, JSON.stringify({ pkcs8, jwk: publicJwk }, null, 2));
+  return { privateKey, publicJwk, kid };
 }
 
-export function getPublicJwk() {
-  return publicJwk;
-}
-
-export async function signToken(payload) {
+export async function sign(privateKey, kid, payload, expiresIn) {
   return new SignJWT(payload)
-    .setProtectedHeader({ alg: 'EdDSA', kid: KID })
+    .setProtectedHeader({ alg: 'EdDSA', kid })
     .setIssuedAt()
-    .setExpirationTime('1h')
+    .setExpirationTime(expiresIn)
     .sign(privateKey);
+}
+
+export async function verify(jwt, publicJwk) {
+  const key = await importJWK(publicJwk, publicJwk.alg);
+  return jwtVerify(jwt, key);
 }
